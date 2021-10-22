@@ -324,6 +324,8 @@ class HarvesterBase(SingletonPlugin):
 
                     if p.toolkit.asbool(config.get('ckan.harvest.partial_changes', False)):
                         action = 'package_patch'
+                        for field in p.toolkit.aslist(config.get('ckan.harvest.protect_fields')):
+                            del package_dict[field]
                     else:
                         action = 'package_update'
                     if package_dict_form != 'package_show':
