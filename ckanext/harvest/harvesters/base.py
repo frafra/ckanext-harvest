@@ -16,6 +16,7 @@ from ckan import model
 from ckan.model import Session, Package, PACKAGE_NAME_MAX_LENGTH
 
 from ckan.logic.schema import default_create_package_schema
+from ckan.lib.base import config
 from ckan.lib.navl.validators import ignore_missing, ignore
 from ckan.lib.munge import munge_title_to_name, substitute_ascii_equivalents
 
@@ -321,9 +322,13 @@ class HarvesterBase(SingletonPlugin):
                     package_dict.setdefault('name',
                                             existing_package_dict['name'])
 
-                    new_package = p.toolkit.get_action(
-                        'package_update' if package_dict_form == 'package_show'
-                        else 'package_update_rest')(context, package_dict)
+                    if p.toolkit.asbool(config.get('ckan.harvest.partial_changes', False)):
+                        action = 'package_patch'
+                    else:
+                        action = 'package_update'
+                    if package_dict_form != 'package_show':
+                        action += '_rest'
+                    new_package = p.toolkit.get_action(action)(context, package_dict)
 
                 else:
                     log.info('No changes to package with GUID %s, skipping...' % harvest_object.guid)
